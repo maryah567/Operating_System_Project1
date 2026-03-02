@@ -24,11 +24,12 @@ public class SchedulingSimulator {
         }
 
         int choice = 0;
-        while (choice != 3) {
+        while (choice != 4) {
             System.out.println("\n CPU Scheduling Simulator");
             System.out.println("1. First_Come, First_Served");
             System.out.println("2. Shortest Job First");
-            System.out.println("3. Exit");
+            System.out.println("3. Priority Scheduling");
+            System.out.println("4. Exit");
             System.out.print("Pick an option ");
 
             if (sc.hasNextInt()) {
@@ -47,6 +48,9 @@ public class SchedulingSimulator {
                     runSJF();
                     break;
                 case 3:
+                    runPriority();
+                    break;
+                case 4:
                     System.out.println("Exiting.");
                     break;
                 default:
@@ -193,6 +197,63 @@ public class SchedulingSimulator {
         printResults(wt, tat);
     }
 
+    static void runPriority() {
+        boolean[] done = new boolean[n];
+        int[] wt = new int[n];
+        int[] tat = new int[n];
+
+        ArrayList<Integer> ganttOrder = new ArrayList<>();
+        ArrayList<Integer> ganttStart = new ArrayList<>();
+        ArrayList<Integer> ganttEnd = new ArrayList<>();
+
+        int currentTime = 0;
+        int completed = 0;
+
+        while (completed < n) {
+            int highest = -1;
+            int minPriority = Integer.MAX_VALUE;
+
+            for (int i = 0; i < n; i++) {
+                if (!done[i] && arrivalTime[i] <= currentTime) {
+                    if (priority[i] < minPriority) {
+                        minPriority = priority[i];
+                        highest = i;
+                    } else if (priority[i] == minPriority && highest != -1 && arrivalTime[i] < arrivalTime[highest]) {
+                        highest = i;
+                    }
+                }
+            }
+
+            if (highest == -1) {
+                currentTime++;
+                continue;
+            }
+
+            ganttOrder.add(highest);
+            ganttStart.add(currentTime);
+            currentTime += burstTime[highest];
+            ganttEnd.add(currentTime);
+
+            tat[highest] = currentTime - arrivalTime[highest];
+            wt[highest] = tat[highest] - burstTime[highest];
+            done[highest] = true;
+            completed++;
+        }
+
+        int[] orderArr = new int[ganttOrder.size()];
+        int[] startArr = new int[ganttStart.size()];
+        int[] endArr = new int[ganttEnd.size()];
+        for (int i = 0; i < ganttOrder.size(); i++) {
+            orderArr[i] = ganttOrder.get(i);
+            startArr[i] = ganttStart.get(i);
+            endArr[i] = ganttEnd.get(i);
+        }
+
+        System.out.println("\n=== Priority Scheduling ===");
+        printGantt(orderArr, startArr, endArr);
+        printResults(wt, tat);
+    }
+
     static void printGantt(int[] order, int[] startTimes, int[] endTimes) {
         System.out.println("\nGantt Chart:");
 
@@ -230,15 +291,26 @@ public class SchedulingSimulator {
 
         double totalWT = 0;
         double totalTAT = 0;
+        int totalBurst = 0;
+        int minArrival = Integer.MAX_VALUE;
+        int maxCompletion = 0;
 
         for (int i = 0; i < n; i++) {
             System.out.println(pid[i] + "\t" + arrivalTime[i] + "\t" + burstTime[i] + "\t" + wt[i] + "\t" + tat[i]);
             totalWT += wt[i];
             totalTAT += tat[i];
+            totalBurst += burstTime[i];
+            if (arrivalTime[i] < minArrival) minArrival = arrivalTime[i];
+            int completion = arrivalTime[i] + tat[i];
+            if (completion > maxCompletion) maxCompletion = completion;
         }
+
+        double cpuUtilization = (maxCompletion > minArrival)
+                ? (totalBurst * 100.0) / (maxCompletion - minArrival)
+                : 100.0;
 
         System.out.printf("\nAverage Waiting Time: %.2f\n", totalWT / n);
         System.out.printf("Average Turnaround Time: %.2f\n", totalTAT / n);
-        System.out.print("CPU Utilization: 100%\n");
+        System.out.printf("CPU Utilization: %.2f%%\n", cpuUtilization);
     }
 }
