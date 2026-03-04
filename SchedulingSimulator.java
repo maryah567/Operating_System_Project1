@@ -145,7 +145,7 @@ public class SchedulingSimulator {
 
         System.out.println("\n=== FCFS Scheduling ===");
         printGantt(order, startTimes, endTimes);
-        printResults(wt, tat);
+        printResults(wt, tat, currentTime);
     }
 
     static void runSJF() {
@@ -202,7 +202,7 @@ public class SchedulingSimulator {
 
         System.out.println("\n=== SJF Scheduling ===");
         printGantt(orderArr, startArr, endArr);
-        printResults(wt, tat);
+        printResults(wt, tat, currentTime);
     }
 
     static void runMemoryAllocation(Scanner sc) {
@@ -409,7 +409,7 @@ public class SchedulingSimulator {
         System.out.println(bottomLine.toString());
     }
 
-    static void printResults(int[] wt, int[] tat) {
+    static void printResults(int[] wt, int[] tat, int totalTime) {
         System.out.println("\nPID\tArrival\tBurst\tWaiting\tTurnaround");
 
         double totalWT = 0;
@@ -420,9 +420,13 @@ public class SchedulingSimulator {
             totalWT += wt[i];
             totalTAT += tat[i];
         }
-
+        int totalBurst = 0;
+        for (int i = 0; i < n; i++) {
+            totalBurst += burstTime[i];
+        }
+        double cpu = (totalBurst * 100.0) / totalTime;
         System.out.printf("\nAverage Waiting Time: %.2f\n", totalWT / n);
         System.out.printf("Average Turnaround Time: %.2f\n", totalTAT / n);
-        System.out.print("CPU Utilization: 100%\n");
+        System.out.printf("CPU Utilization: %.2f%%\n", cpu);
     }
 }
