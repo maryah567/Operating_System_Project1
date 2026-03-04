@@ -143,9 +143,13 @@ public class SchedulingSimulator {
             wt[idx] = tat[idx] - burstTime[idx];
         }
 
+        int totalBurst = 0;
+        for (int i = 0; i < n; i++) totalBurst += burstTime[i];
+        int totalTime = endTimes[n - 1] - startTimes[0];
+
         System.out.println("\n=== FCFS Scheduling ===");
         printGantt(order, startTimes, endTimes);
-        printResults(wt, tat, currentTime);
+        printResults(wt, tat, totalBurst, totalTime);
     }
 
     static void runSJF() {
@@ -200,9 +204,13 @@ public class SchedulingSimulator {
             endArr[i] = ganttEnd.get(i);
         }
 
+        int totalBurst = 0;
+        for (int i = 0; i < n; i++) totalBurst += burstTime[i];
+        int totalTime = endArr[endArr.length - 1] - startArr[0];
+
         System.out.println("\n=== SJF Scheduling ===");
         printGantt(orderArr, startArr, endArr);
-        printResults(wt, tat, currentTime);
+        printResults(wt, tat, totalBurst, totalTime);
     }
 
     static void runMemoryAllocation(Scanner sc) {
@@ -409,7 +417,7 @@ public class SchedulingSimulator {
         System.out.println(bottomLine.toString());
     }
 
-    static void printResults(int[] wt, int[] tat, int totalTime) {
+    static void printResults(int[] wt, int[] tat, int totalBurst, int totalTime) {
         System.out.println("\nPID\tArrival\tBurst\tWaiting\tTurnaround");
 
         double totalWT = 0;
@@ -420,13 +428,9 @@ public class SchedulingSimulator {
             totalWT += wt[i];
             totalTAT += tat[i];
         }
-        int totalBurst = 0;
-        for (int i = 0; i < n; i++) {
-            totalBurst += burstTime[i];
-        }
-        double cpu = (totalBurst * 100.0) / totalTime;
+
         System.out.printf("\nAverage Waiting Time: %.2f\n", totalWT / n);
         System.out.printf("Average Turnaround Time: %.2f\n", totalTAT / n);
-        System.out.printf("CPU Utilization: %.2f%%\n", cpu);
+        System.out.printf("CPU Utilization: %.2f%%\n", (totalBurst * 100.0) / totalTime);
     }
 }
