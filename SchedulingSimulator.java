@@ -24,11 +24,14 @@ public class SchedulingSimulator {
         }
 
         int choice = 0;
-        while (choice != 3) {
+        while (choice != 6) {
             System.out.println("\n CPU Scheduling Simulator");
             System.out.println("1. First_Come, First_Served");
             System.out.println("2. Shortest Job First");
-            System.out.println("3. Exit");
+            System.out.println("3. Memory Allocation (First-Fit, Best-Fit, Worst-Fit)");
+            System.out.println("4. Page Replacement (FIFO)");
+            System.out.println("5. Page Replacement (LRU)");
+            System.out.println("6. Exit");
             System.out.print("Pick an option ");
 
             if (sc.hasNextInt()) {
@@ -47,6 +50,15 @@ public class SchedulingSimulator {
                     runSJF();
                     break;
                 case 3:
+                    runMemoryAllocation(sc);
+                    break;
+                case 4:
+                    runFIFO(sc);
+                    break;
+                case 5:
+                    runLRU(sc);
+                    break;
+                case 6:
                     System.out.println("Exiting.");
                     break;
                 default:
@@ -191,6 +203,178 @@ public class SchedulingSimulator {
         System.out.println("\n=== SJF Scheduling ===");
         printGantt(orderArr, startArr, endArr);
         printResults(wt, tat);
+    }
+
+    static void runMemoryAllocation(Scanner sc) {
+        System.out.print("Enter number of memory blocks: ");
+        int numBlocks = sc.nextInt();
+        int[] blockSize = new int[numBlocks];
+        System.out.println("Enter the size of each block:");
+        for (int i = 0; i < numBlocks; i++) {
+            System.out.print("  Block " + (i + 1) + ": ");
+            blockSize[i] = sc.nextInt();
+        }
+
+        System.out.print("Enter number of processes to allocate: ");
+        int numProcs = sc.nextInt();
+        int[] procSize = new int[numProcs];
+        System.out.println("Enter memory needed for each process:");
+        for (int i = 0; i < numProcs; i++) {
+            System.out.print("  Process " + (i + 1) + ": ");
+            procSize[i] = sc.nextInt();
+        }
+
+        System.out.println("\n=== First-Fit Allocation ===");
+        firstFit(blockSize.clone(), procSize);
+
+        System.out.println("\n=== Best-Fit Allocation ===");
+        bestFit(blockSize.clone(), procSize);
+
+        System.out.println("\n=== Worst-Fit Allocation ===");
+        worstFit(blockSize.clone(), procSize);
+    }
+
+    static void firstFit(int[] blocks, int[] procs) {
+        int[] allocation = new int[procs.length];
+        Arrays.fill(allocation, -1);
+
+        for (int i = 0; i < procs.length; i++) {
+            for (int j = 0; j < blocks.length; j++) {
+                if (blocks[j] >= procs[i]) {
+                    allocation[i] = j;
+                    blocks[j] -= procs[i];
+                    break;
+                }
+            }
+        }
+
+        printAllocation(procs, allocation);
+    }
+
+    static void bestFit(int[] blocks, int[] procs) {
+        int[] allocation = new int[procs.length];
+        Arrays.fill(allocation, -1);
+
+        for (int i = 0; i < procs.length; i++) {
+            int bestIdx = -1;
+            for (int j = 0; j < blocks.length; j++) {
+                if (blocks[j] >= procs[i]) {
+                    if (bestIdx == -1 || blocks[j] < blocks[bestIdx]) {
+                        bestIdx = j;
+                    }
+                }
+            }
+            if (bestIdx != -1) {
+                allocation[i] = bestIdx;
+                blocks[bestIdx] -= procs[i];
+            }
+        }
+
+        printAllocation(procs, allocation);
+    }
+
+    static void worstFit(int[] blocks, int[] procs) {
+        int[] allocation = new int[procs.length];
+        Arrays.fill(allocation, -1);
+
+        for (int i = 0; i < procs.length; i++) {
+            int worstIdx = -1;
+            for (int j = 0; j < blocks.length; j++) {
+                if (blocks[j] >= procs[i]) {
+                    if (worstIdx == -1 || blocks[j] > blocks[worstIdx]) {
+                        worstIdx = j;
+                    }
+                }
+            }
+            if (worstIdx != -1) {
+                allocation[i] = worstIdx;
+                blocks[worstIdx] -= procs[i];
+            }
+        }
+
+        printAllocation(procs, allocation);
+    }
+
+    static void printAllocation(int[] procs, int[] allocation) {
+        System.out.println("Process\tSize\tBlock");
+        for (int i = 0; i < procs.length; i++) {
+            System.out.print((i + 1) + "\t" + procs[i] + "\t");
+            if (allocation[i] != -1)
+                System.out.println(allocation[i] + 1);
+            else
+                System.out.println("Not Allocated");
+        }
+    }
+
+    static void runFIFO(Scanner sc) {
+        System.out.print("Enter number of frames: ");
+        int frames = sc.nextInt();
+        System.out.print("Enter number of pages in reference string: ");
+        int numPages = sc.nextInt();
+        int[] pages = new int[numPages];
+        System.out.println("Enter the page reference string:");
+        for (int i = 0; i < numPages; i++) {
+            pages[i] = sc.nextInt();
+        }
+
+        LinkedList<Integer> frameList = new LinkedList<>();
+        int pageFaults = 0;
+
+        System.out.println("\n=== FIFO Page Replacement ===");
+        System.out.println("Step\tPage\tFrames\t\t\tFault");
+
+        for (int i = 0; i < numPages; i++) {
+            boolean fault = false;
+            if (!frameList.contains(pages[i])) {
+                if (frameList.size() >= frames) {
+                    frameList.removeFirst();
+                }
+                frameList.addLast(pages[i]);
+                pageFaults++;
+                fault = true;
+            }
+            System.out.println((i + 1) + "\t" + pages[i] + "\t" + frameList + "\t\t" + (fault ? "Yes" : "No"));
+        }
+
+        System.out.println("\nTotal Page Faults: " + pageFaults);
+        System.out.printf("Hit Ratio: %.2f%%\n", ((numPages - pageFaults) * 100.0) / numPages);
+    }
+
+    static void runLRU(Scanner sc) {
+        System.out.print("Enter number of frames: ");
+        int frames = sc.nextInt();
+        System.out.print("Enter number of pages in reference string: ");
+        int numPages = sc.nextInt();
+        int[] pages = new int[numPages];
+        System.out.println("Enter the page reference string:");
+        for (int i = 0; i < numPages; i++) {
+            pages[i] = sc.nextInt();
+        }
+
+        LinkedList<Integer> frameList = new LinkedList<>();
+        int pageFaults = 0;
+
+        System.out.println("\n=== LRU Page Replacement ===");
+        System.out.println("Step\tPage\tFrames\t\t\tFault");
+
+        for (int i = 0; i < numPages; i++) {
+            boolean fault = false;
+            if (frameList.contains(pages[i])) {
+                frameList.remove(Integer.valueOf(pages[i]));
+                frameList.addLast(pages[i]);
+            } else {
+                if (frameList.size() >= frames) {
+                    frameList.removeFirst();
+                }
+                frameList.addLast(pages[i]);
+                pageFaults++;
+                fault = true;
+            }
+            System.out.println((i + 1) + "\t" + pages[i] + "\t" + frameList + "\t\t" + (fault ? "Yes" : "No"));
+        }
+
+        System.out.println("\nTotal Page Faults: " + pageFaults);
+        System.out.printf("Hit Ratio: %.2f%%\n", ((numPages - pageFaults) * 100.0) / numPages);
     }
 
     static void printGantt(int[] order, int[] startTimes, int[] endTimes) {
