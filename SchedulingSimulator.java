@@ -203,7 +203,7 @@ public class SchedulingSimulator {
         printGantt(orderArr, startArr, endArr);
         printResults(wt, tat);
     }
-    // --- STEP 4: MEMORY MANAGEMENT ---
+    //Memory management
     static void runFirstFit(int processSize) {
         System.out.println("\nCurrent Blocks: " + Arrays.toString(memoryBlocks));
         boolean allocated = false;
@@ -217,7 +217,7 @@ public class SchedulingSimulator {
         }
         if (!allocated) System.out.println("Insufficient memory for " + processSize + "KB");
     }
-
+    // FIFO page replacement
     static void runFIFO() {
         HashSet<Integer> frames = new HashSet<>();
         Queue<Integer> queue = new LinkedList<>();
