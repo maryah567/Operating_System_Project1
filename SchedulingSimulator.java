@@ -8,6 +8,9 @@ public class SchedulingSimulator {
     static int[] burstTime;
     static int[] priority;
     static int n;
+    static int[] memoryBlocks = {100, 500, 200, 300, 600}; 
+    static int[] pages = {1, 2, 3, 4, 2, 1, 5, 6, 2, 1, 2, 3}; 
+    static int frameCount = 3;
 
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
@@ -24,11 +27,13 @@ public class SchedulingSimulator {
         }
 
         int choice = 0;
-        while (choice != 3) {
+        while (choice != 5) {
             System.out.println("\n CPU Scheduling Simulator");
             System.out.println("1. First_Come, First_Served");
             System.out.println("2. Shortest Job First");
-            System.out.println("3. Exit");
+            System.out.println("3. Memory Allocation (First-Fit)");
+            System.out.println("4. Page Replacement (FIFO)");
+            System.out.println("5. Exit");
             System.out.print("Pick an option ");
 
             if (sc.hasNextInt()) {
@@ -46,7 +51,13 @@ public class SchedulingSimulator {
                 case 2:
                     runSJF();
                     break;
-                case 3:
+                case 3: 
+                    System.out.print("Enter process size to allocate (KB): ");
+                    int size = sc.nextInt();
+                    runFirstFit(size); 
+                    break;
+                case 4: runFIFO(); break;
+                case 5:
                     System.out.println("Exiting.");
                     break;
                 default:
@@ -97,7 +108,7 @@ public class SchedulingSimulator {
 
         System.out.println("Loaded " + n + " processes from " + filename);
     }
-
+    // First-Come, First-Served Scheduling
     static void runFCFS() {
         int[] order = new int[n];
         for (int i = 0; i < n; i++) order[i] = i;
@@ -135,7 +146,7 @@ public class SchedulingSimulator {
         printGantt(order, startTimes, endTimes);
         printResults(wt, tat);
     }
-
+    // Shortest Job First scheduling
     static void runSJF() {
         boolean[] done = new boolean[n];
         int[] wt = new int[n];
@@ -192,7 +203,42 @@ public class SchedulingSimulator {
         printGantt(orderArr, startArr, endArr);
         printResults(wt, tat);
     }
-
+    //Memory management
+    static void runFirstFit(int processSize) {
+        System.out.println("\nCurrent Blocks: " + Arrays.toString(memoryBlocks));
+        boolean allocated = false;
+        for (int i = 0; i < memoryBlocks.length; i++) {
+            if (memoryBlocks[i] >= processSize) {
+                System.out.println("Allocated " + processSize + "KB to Block " + i);
+                memoryBlocks[i] -= processSize;
+                allocated = true;
+                break;
+            }
+        }
+        if (!allocated) System.out.println("Insufficient memory for " + processSize + "KB");
+    }
+    // FIFO page replacement
+    static void runFIFO() {
+        HashSet<Integer> frames = new HashSet<>();
+        Queue<Integer> queue = new LinkedList<>();
+        int faults = 0;
+        System.out.println("\nFIFO Page Replacement (Frames: " + frameCount + ")");
+        for (int page : pages) {
+            if (!frames.contains(page)) {
+                if (frames.size() == frameCount) {
+                    int oldest = queue.poll();
+                    frames.remove(oldest);
+                }
+                frames.add(page);
+                queue.add(page);
+                faults++;
+                System.out.println("Page " + page + ": MISS -> " + frames);
+            } else {
+                System.out.println("Page " + page + ": HIT  -> " + frames);
+            }
+        }
+        System.out.println("Total Page Faults: " + faults);
+    }
     static void printGantt(int[] order, int[] startTimes, int[] endTimes) {
         System.out.println("\nGantt Chart:");
 
@@ -242,3 +288,4 @@ public class SchedulingSimulator {
         System.out.print("CPU Utilization: 100%\n");
     }
 }
+
